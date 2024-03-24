@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+    le_grenier_wordpress:
+        depends_on:
+            - le_grenier_db
+        image: wordpress
+        restart: always
+        environment:
+            WORDPRESS_DB_HOST: ${LE_GRENIER_WORDPRESS_DB_HOST}
+            WORDPRESS_DB_NAME: ${LE_GRENIER_WORDPRESS_DB_NAME}
+            WORDPRESS_DB_USER: ${LE_GRENIER_WORDPRESS_DB_USER}
+            WORDPRESS_DB_PASSWORD: ${LE_GRENIER_WORDPRESS_DB_PASSWORD}
+        volumes:
+            - /var/le_grenier_wordpress:/var/www/html
+        deploy:
+            labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.le_grenier.rule=Host(`le-grenier.418.ovh`)"
+                - "traefik.docker.network=shared-proxy"
+                - "traefik.http.routers.le_grenier.tls=true"
+                - "traefik.http.routers.le_grenier.tls.certresolver=mytlschallenge"
+                - "traefik.http.routers.le_grenier.middlewares=le_grenier-redirectregex@docker"
+                - "traefik.http.services.le_grenier.loadbalancer.server.port=80" # it seems you always need to give traefik a port so it 'notices' the service
+        networks:
+            - shared-proxy
+
+    le_grenier_db:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: ${LE_GRENIER_WORDPRESS_DB_NAME}
+            MYSQL_USER: ${LE_GRENIER_WORDPRESS_DB_USER}
+            MYSQL_PASSWORD: ${LE_GRENIER_WORDPRESS_DB_PASSWORD}
+            MYSQL_RANDOM_ROOT_PASSWORD: '1'
+        volumes:
+            - /var/le_grenier_db:/var/lib/mysql
+        networks:
+            - shared-proxy
+
+networks:
+    shared-proxy:
+        external: true
