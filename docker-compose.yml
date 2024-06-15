@@ -4,7 +4,7 @@ services:
     le_grenier_wordpress:
         depends_on:
             - le_grenier_db
-        image: wordpress
+        image: wordpress:php8.0
         restart: always
         environment:
             WORDPRESS_DB_HOST: ${LE_GRENIER_WORDPRESS_DB_HOST}
@@ -16,11 +16,9 @@ services:
         deploy:
             labels:
                 - "traefik.enable=true"
-                - "traefik.http.routers.le_grenier.rule=Host(`le-grenier.418.ovh`)"
-                - "traefik.docker.network=shared-proxy"
+                - "traefik.http.routers.le_grenier.rule=Host(`le-grenier.418.ovh`,`le-grenier.gite-beaumont-saint-cyr.fr`)"
                 - "traefik.http.routers.le_grenier.tls=true"
                 - "traefik.http.routers.le_grenier.tls.certresolver=mytlschallenge"
-                - "traefik.http.routers.le_grenier.middlewares=le_grenier-redirectregex@docker"
                 - "traefik.http.services.le_grenier.loadbalancer.server.port=80" # it seems you always need to give traefik a port so it 'notices' the service
         networks:
             - shared-proxy
